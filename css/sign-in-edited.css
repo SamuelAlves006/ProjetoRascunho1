@@ -1,0 +1,58 @@
+body {
+    background-color: #ffffff;
+    opacity: 1;
+    background-image: radial-gradient(#6C5EFF 0.9px, #ffffff 0.9px);
+    background-size: 18px 18px;
+}
+
+.form-signin {
+    font-family: Montserrat;
+    background-color: white;
+    border: 1px black solid;
+    border-radius: 30px;
+    box-shadow: rgba(0, 0, 0, 0.75) 0px 5px 15px;
+}
+
+.aviso-cadastro {
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    margin-top: 10px;
+
+}
+.cadastrar {
+    color: black;
+    font-weight:bold;
+    text-decoration: none;
+}
+
+.titulo {
+    color: #6C5EFF;
+    margin-bottom: 50px;
+    font-weight: 800;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+}
+
+.email, .password {
+    border: 5px solid black;
+}
+
+.btn {
+    background-color: #6C5EFF;
+    border: #6C5EFF;
+    --bs-btn-hover-bg: #5248bd;
+    --bs-btn-hover-border-color: #5248bd;
+    --bs-btn-bg: #6C5EFF;
+    --bs-btn-border-color: #6C5EFF;
+    --bs-btn-active-bg: #5248bd;
+    --bs-btn-active-border-color: #5248bd;
+    --bs-btn-disabled-bg: #6C5EFF;
+    --bs-btn-disabled-border-color: #6C5EFF;
+}
+
+.form-check-input:checked {
+    background-color: #6C5EFF;
+    border: #6C5EFF;
+}

@@ -1,0 +1,8 @@
+.container {
+  max-width: 960px;
+}
+
+.col-md-7 {
+  margin: auto;
+  text-align: center;
+}
