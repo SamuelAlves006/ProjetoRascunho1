@@ -108,7 +108,7 @@
 
 <nav class="navbar navbar-expand-md mb-4">
   <div class="container-fluid">
-    <a class="navbar-brand" href="#">
+    <a class="navbar-brand" href="php/landing-page.php">
       Planify Now
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
@@ -117,89 +117,131 @@
     <div class="collapse navbar-collapse" id="navbarCollapse">
       <ul class="navbar-nav me-auto mb-2 mb-md-0">
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="landing-page.html">Início</a>
+          <a class="nav-link active" aria-current="page" href="php/landing-page.php">Início</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link active" href="agenda.html">Eventos</a>
+          <a class="nav-link active" href="agenda.php">Eventos</a>
         </li>
         <li class="nav-item">
           <a class="nav-link active" href="calendario.html">Calendário</a>
         </li>
       </ul>
-      <form class="d-flex" role="search" action="pesquisa.html">
-        <input class="form-control me-2" type="search" placeholder="Pesquisar um evento" aria-label="Search">
-        <button class="btn btn-outline-success buscar" type="submit">Buscar</button>
-      </form>
+      <a href="php/logout.php" class="tirar-sublinhado">    
+        <i class="fa-solid fa-right-from-bracket"></i>  
+        <button type="submit" class="logout">Sair</button>
+      </a>
     </div>
   </div>
 </nav>
 
 <main>
-  <div class="agenda-container">
-    <div class="header">Agenda Online</div>
-
-    <div class="input-container">
-        <input type="text" placeholder="Digite o evento">
-        <button onclick="addEvent()">Adicionar Evento</button>
+  <div class="container my-5">
+    <h4 style="padding:10px;font-weight:400">Lista de Eventos</h4>
+    <div class="pesquisar">
+      <div class="d-flex justify-content-between">
+        <div class="d-flex">
+          <input class="form-control me-2" type="search" placeholder="Pesquisar um evento" aria-label="Search" id="pesquisar">
+          <button onclick="searchData()" class="btn btn-outline-success" type="submit">Buscar</button>
+        </div>
+        <div>
+          <a class="btn btn-primary" href="php/criar-evento.php" role="button">Adicionar Evento</a>
+        </div>
+      </div>
     </div>
+    <br>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Descrição</th>
+          <th>Hora de Início</th>
+          <th>Hora de Término</th>
+          <th>Data</th>
+          <th>Prioridade</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php
+          include 'php/conexao.php';
 
-    <div class="spacer"></div>
+          if(!empty($_GET['search'])) {
+            $data = $_GET['search'];
+            $sql = "SELECT * FROM evento WHERE nome LIKE '%$data%' or descricao LIKE '%$data%'";
+          }
+        
+          else {
+            $sql = "SELECT * FROM evento";
+          }
 
-    <div class="tasks-container">
-        <table class="tasks-table">
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Hora</th>
-                    <th>Data</th>
-                    <th>Prioridade</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Aqui serão adicionadas as tarefas dinamicamente -->
-                <!-- Adicione este trecho dentro da tag <tbody> -->
-              <tr>
-                <td class="nome">Reunião de Projeto</td>
-                <td class="horario">14:30</td>
-                <td class="data">09/03/2024</td>
-                <td class="prioridade">Alta</td>
+          // ler todas as linhas da tabela
+          $result = $conexao->query($sql);
+
+          if (!$result) {
+            die("Invalid query: " . $conexao->error);
+          }
+
+          // ler dados de cada linha
+          while($row = $result->fetch_assoc()) {
+            // Definindo estilo CSS com base na prioridade
+            $prioridade_style = '';
+            switch ($row['prioridade']) {
+                case 'Alta':
+                    $prioridade_style = 'background-color: #ffa5a5; color: #640000; border-radius: 10px;';
+                    break;
+                case 'Média':
+                    $prioridade_style = 'background-color: #ffff9a; color: #464500; border-radius: 10px;';
+                    break;
+                case 'Baixa':
+                    $prioridade_style = 'background-color: #7dffba; color: #004720; border-radius: 10px;';
+                    break;
+                default:
+                    $prioridade_style = ''; // Tratamento para outros casos
+            }
+          
+            // Exibindo os dados na tabela HTML
+            echo "<tr>
+                <td>{$row['nome']}</td>
+                <td style='max-width:200px'>{$row['descricao']}</td>
+                <td>{$row['hr_inicio']}</td>
+                <td>{$row['hr_termino']}</td>
+                <td>{$row['data']}</td>
                 <td>
-                    <button class="edit-btn" onclick="editEvent()">
-                        <i class="fas fa-edit"></i> Editar
-                    </button>
-                    <button class="delete-btn" onclick="deleteEvent()">
-                        <i class="fas fa-trash-alt"></i> Excluir
-                    </button>
+                    <span style='{$prioridade_style} padding: 5px;'>{$row['prioridade']}</span>
                 </td>
-              </tr>
-
-              <tr>
-                <td class="nome">Conferir planilhas</td>
-                <td class="horario">15:20</td>
-                <td class="data">09/03/2024</td>
-                <td class="prioridade">Média</td>
                 <td>
-                    <button class="edit-btn" onclick="editEvent()">
-                        <i class="fas fa-edit"></i> Editar
-                    </button>
-                    <button class="delete-btn" onclick="deleteEvent()">
-                        <i class="fas fa-trash-alt"></i> Excluir
-                    </button>
+                    <a class='btn btn-primary btn-sm' href='php/editar-evento.php?id_evento={$row['id_evento']}'>
+                        <i class='fa-solid fa-pen-to-square'></i>
+                    </a>
+                    <a class='btn btn-danger btn-sm' href='php/excluir-evento.php?id_evento={$row['id_evento']}'>
+                        <i class='fa-solid fa-trash-can'></i>
+                    </a>
                 </td>
-              </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
+            </tr>";
+        }
+        ?>
+
+      </tbody>
+    </table>
+  </div>
+
 </main>
 
 <script src="../assets/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-  function addEvent() {
-      // Lógica para adicionar eventos aqui
-      // Esta função será chamada quando o botão "Adicionar Evento" for clicado
+  var search = document.getElementById('pesquisar');
+
+  search.addEventListener("keydown", function(event) {
+    if (event.key === "Enter")
+    {
+      searchData();
+    }
+  });
+
+  function searchData()
+  {
+    window.location = 'agenda.php?search='+search.value;
   }
 </script>
 

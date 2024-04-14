@@ -108,7 +108,7 @@
 
     <nav class="navbar navbar-expand-md mb-4">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#">
+        <a class="navbar-brand" href="php/landing-page.php">
         Planify Now
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
@@ -117,19 +117,19 @@
         <div class="collapse navbar-collapse" id="navbarCollapse">
         <ul class="navbar-nav me-auto mb-2 mb-md-0">
             <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="landing-page.html">Início</a>
+            <a class="nav-link active" aria-current="page" href="php/landing-page.php">Início</a>
             </li>
             <li class="nav-item">
-            <a class="nav-link active" href="agenda.html">Eventos</a>
+            <a class="nav-link active" href="agenda.php">Eventos</a>
             </li>
             <li class="nav-item">
             <a class="nav-link active" href="calendario.html">Calendário</a>
             </li>
         </ul>
-        <form class="d-flex" role="search" action="pesquisa.html">
-            <input class="form-control me-2" type="search" placeholder="Pesquisar um evento" aria-label="Search">
-            <button class="btn btn-outline-success buscar" type="submit">Buscar</button>
-        </form>
+        <a href="php/logout.php" class="tirar-sublinhado">    
+          <i class="fa-solid fa-right-from-bracket"></i>  
+          <button type="submit" class="logout">Sair</button>
+        </a>
         </div>
     </div>
     </nav>

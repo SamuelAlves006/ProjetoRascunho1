@@ -58,12 +58,23 @@ body {
         --bs-btn-disabled-border-color: #6C5EFF;
 }
   
-.buscar {
+.logout {
     font-family: "Poppins", sans-serif;
     font-weight: 400;
     font-style: normal;
-    border-radius: 20px;
-    font-size: 15px;
+    font-size: 16px;
+    border: none;
+    background-color: white;
+    margin-right: 30px;
+}
+
+.tirar-sublinhado {
+  text-decoration: none;
+}
+
+.fa-right-from-bracket {
+  color: black;
+  font-size: 18px;
 }
 
 .form-control {
@@ -161,27 +172,6 @@ body {
   text-align: center;
 }
 
-.edit-btn, .delete-btn {
-  background-color: #6C5EFF;
-  color: #fff;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.edit-btn:hover, .delete-btn:hover {
-  background-color: #5249bc;
-  color: #fff;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-
 @media (max-width: 600px) {
   .agenda-container {
       width: 90%;
@@ -211,4 +201,46 @@ body {
 
 .tasks-table td.prioridade[data-priority="Baixa"] {
   background-color: #99ff99; /* Cor de fundo verde para prioridade Baixa */
+}
+
+.container {
+  background-color: white;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  border-radius: 15px;
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.pesquisar {
+  margin: 10px
+}
+
+.pesquisar button {
+  border-radius: 20px;
+
+}
+
+td .fa-pen-to-square, td .btn {
+  background-color: rgb(0, 91, 219);
+  border: none;
+  font-size: 18px;
+}
+
+td .fa-trash-can, td .btn-danger {
+  background-color: rgb(255, 37, 37);
+  border: none;
+  font-size: 18px;
+}
+
+td .fa-pen-to-square:hover, td .btn:hover {
+  background-color: rgb(0, 66, 159);
+}
+
+td .fa-trash-can:hover, td .btn-danger:hover {
+  background-color: rgb(165, 0, 0);
+}
+
+.centralizar {
+  justify-content: center;
 }

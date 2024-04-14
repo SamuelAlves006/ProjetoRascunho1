@@ -12,11 +12,12 @@
     <link rel="canonical" href="https://getbootstrap.com/docs/5.3/examples/navbar-static/">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="css/main-edited.css">
+    <link rel="stylesheet" href="../css/main-edited.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3">
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <link href="../assets/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -102,12 +103,30 @@
     
     <!-- Custom styles for this template -->
     <link href="navbar-static.css" rel="stylesheet">
+
+    <?php 
+        session_start();//Inicia uma nova sessão ou resume uma sessão existente
+
+
+
+        if((!isset ($_SESSION['email']) == true) and (!isset ($_SESSION['senha']) == true))
+        {
+            session_unset();//remove todas as variáveis de sessão
+            echo "<script>
+                alert('Esta página só pode ser acessada por usuário logado');
+                window.location.href = 'index.html';
+                </script>";
+
+        }
+        $logado = $_SESSION['email'];
+    ?>
+    
   </head>
   <body>
 
 <nav class="navbar navbar-expand-md mb-4">
   <div class="container-fluid">
-    <a class="navbar-brand" href="#">
+    <a class="navbar-brand" href="landing-page.php">
       Planify Now
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
@@ -116,19 +135,19 @@
     <div class="collapse navbar-collapse" id="navbarCollapse">
       <ul class="navbar-nav me-auto mb-2 mb-md-0">
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="landing-page.html">Início</a>
+          <a class="nav-link active" aria-current="page" href="landing-page.php">Início</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link active" href="agenda.html">Eventos</a>
+          <a class="nav-link active" href="../agenda.php">Eventos</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link active" href="calendario.html">Calendário</a>
+          <a class="nav-link active" href="../calendario.html">Calendário</a>
         </li>
       </ul>
-      <form class="d-flex" role="search">
-        <input class="form-control me-2" type="search" placeholder="Pesquisar um evento" aria-label="Search">
-        <button class="btn btn-outline-success buscar" type="submit">Buscar</button>
-      </form>
+      <a href="logout.php" class="tirar-sublinhado">    
+        <i class="fa-solid fa-right-from-bracket"></i>  
+        <button type="submit" class="logout">Sair</button>
+      </a>
     </div>
   </div>
 </nav>
@@ -141,10 +160,10 @@
       <p>
         Bem-vindo ao Planify Now, seu aliado ideal para organizar a vida! Adicione compromissos facilmente, crie momentos especiais e desfrute de uma rotina planejada. Clique agora para começar!
       </p>
-      <a href="agenda.html" class="home-btn">Criar um evento</a>
+      <a href="../agenda.html" class="home-btn">Criar um evento</a>
     </div>
     <div class="home-img">
-      <img src="imagens/schedule-home.svg" alt="Agenda">
+      <img src="../imagens/schedule-home.svg" alt="Agenda">
     </div>
   </section>
 </main>

@@ -55,12 +55,23 @@ body {
       --bs-btn-disabled-border-color: #6C5EFF;
 }
 
-.buscar {
+.logout {
   font-family: "Poppins", sans-serif;
   font-weight: 400;
   font-style: normal;
-  border-radius: 20px;
-  font-size: 15px;
+  font-size: 16px;
+  border: none;
+  background-color: white;
+  margin-right: 30px;
+}
+
+.tirar-sublinhado {
+  text-decoration: none;
+}
+
+.fa-right-from-bracket {
+  color: black;
+  font-size: 18px;
 }
 
 .form-control {
