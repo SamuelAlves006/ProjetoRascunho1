@@ -14,14 +14,15 @@
     $hr_termino = "";
     $data = "";
     $prioridade = "";
+    $prioridade_nome = "";
 
     $errorMessage = "";
     $successMessage = "";
 
-    if ( $_SERVER['REQUEST_METHOD'] == 'GET' ) {
+    if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         // GET method: Mostrar os dados do evento
 
-        if ( !isset($_GET["id_evento"]) ) {
+        if (!isset($_GET["id_evento"])) {
             header("location: ../agenda.php");
             exit;
         }
@@ -29,7 +30,9 @@
         $id_evento = $_GET["id_evento"];
 
         // ler a linha do evento selecionado da tabela de eventos
-        $sql = "SELECT * FROM evento WHERE id_evento=$id_evento";
+        $sql = "SELECT evento.*, prioridade.status AS prioridade_nome FROM evento 
+                INNER JOIN prioridade ON evento.id_prioridade = prioridade.id_prioridade 
+                WHERE id_evento = $id_evento";
         $result = $conexao->query($sql);
         $row = $result->fetch_assoc();
 
@@ -43,44 +46,52 @@
         $hr_inicio = $row["hr_inicio"];
         $hr_termino = $row["hr_termino"];
         $data = $row["data"];
-        $prioridade = $row["prioridade"];
-    }
-
-    else {
+        // Define $prioridade como vazio quando o método da requisição é GET
+        $prioridade_nome = $row["prioridade_nome"];
+    } else {
         // POST method: Update the data of the event
-
+    
         $id_evento = $_POST["id_evento"];
         $nome = $_POST["nome"];
         $descricao = $_POST["descricao"];
         $hr_inicio = $_POST["hr_inicio"];
         $hr_termino = $_POST["hr_termino"];
         $data = $_POST["data"];
-        $prioridade = $_POST["prioridade"];
-
-        do {
-            if ( empty($id_evento) || empty($nome) || empty($descricao) || empty($hr_inicio) || empty($hr_termino) || empty($data)  || empty($prioridade) ) {
-                $errorMessage = "Preencha todos os campos";
-                break;
+        $prioridade = isset($_POST["prioridade"]) ? $_POST["prioridade"] : "";
+    
+        // Verificar se todos os campos foram preenchidos
+        if (empty($id_evento) || empty($nome) || empty($descricao) || empty($hr_inicio) || empty($hr_termino) || empty($data) || empty($prioridade)) {
+            $errorMessage = "Preencha todos os campos";
+        } else {
+            // Verificar se a prioridade selecionada é válida
+            $sql_prioridade = "SELECT COUNT(*) AS total FROM prioridade WHERE id_prioridade = ?";
+            $stmt = $conexao->prepare($sql_prioridade);
+            $stmt->bind_param("i", $prioridade);
+            $stmt->execute();
+            $result_prioridade = $stmt->get_result();
+            $row_prioridade = $result_prioridade->fetch_assoc();
+    
+            if ($row_prioridade["total"] == 1) {
+                // Consulta de atualização usando o ID da prioridade
+                $sql_update = "UPDATE evento 
+                               SET nome = ?, descricao = ?, hr_inicio = ?, hr_termino = ?, data = ?, id_prioridade = ? 
+                               WHERE id_evento = ?";
+                $stmt = $conexao->prepare($sql_update);
+                $stmt->bind_param("sssssii", $nome, $descricao, $hr_inicio, $hr_termino, $data, $prioridade, $id_evento);
+    
+                if ($stmt->execute()) {
+                    $successMessage = "Evento atualizado com sucesso";
+                    header("location: ../agenda.php");
+                    exit;
+                } else {
+                    $errorMessage = "Erro ao atualizar o evento: " . $conexao->error;
+                }
+            } else {
+                $errorMessage = "Prioridade selecionada inválida. Por favor, selecione uma prioridade válida.";
             }
-
-            $sql = "UPDATE evento " .
-                    "SET nome = '$nome', descricao = '$descricao', hr_inicio = '$hr_inicio', hr_termino = '$hr_termino', data = '$data', prioridade = '$prioridade' " .
-                    "WHERE id_evento = $id_evento";
-            
-            $result = $conexao->query($sql);
-
-            if (!$result) {
-                $errorMessage = "Invalid query: " . $conexao->error;
-                break;
-            }
-
-            $successMessage = "Evento atualizado com sucesso";
-
-            header("location: ../agenda.php");
-            exit;
-
-        } while (false);
-    }
+        }
+    
+    }    
 ?>
 
 <!DOCTYPE html>
@@ -149,8 +160,10 @@
 
             <div class="row mb-3">
                 <label class="col-sm-3 col-form-label">Prioridade</label>
-                <div class="col-sm-6">
-                    <input type="text" class="form-control" name="prioridade" value="<?php echo $prioridade; ?>">
+                <div class="col-sm-6" style="margin-top:10px">
+                    <input type="radio" class="opcoes" name="prioridade" id="alta" value="1" <?php echo ($prioridade_nome == 'Alta') ? 'checked' : ''; ?>> <label for="alta" style="font-size:17px;margin-left:10px">Alta</label><br>
+                    <input type="radio" class="opcoes" name="prioridade" id="media" value="2" <?php echo ($prioridade_nome == 'Média') ? 'checked' : ''; ?>> <label for="media" style="font-size:17px;margin-left:10px">Média</label><br>
+                    <input type="radio" class="opcoes" name="prioridade" id="baixa" value="3" <?php echo ($prioridade_nome == 'Baixa') ? 'checked' : ''; ?>> <label for="baixa" style="font-size:17px;margin-left:10px">Baixa</label><br>
                 </div>
             </div>
 

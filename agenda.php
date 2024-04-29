@@ -1,3 +1,18 @@
+<?php 
+        session_start();//Inicia uma nova sessão ou resume uma sessão existente
+
+        if((!isset ($_SESSION['email']) == true) and (!isset ($_SESSION['senha']) == true))
+        {
+            session_unset();//remove todas as variáveis de sessão
+            echo "<script>
+                alert('Esta página só pode ser acessada por usuário logado');
+                window.location.href = 'php/index.php';
+                </script>";
+
+        }
+        $logado = $_SESSION['email'];
+?>
+
 <!doctype html>
 <html lang="en" data-bs-theme="auto">
   <head><script src="../assets/js/color-modes.js"></script>
@@ -103,6 +118,7 @@
     
     <!-- Custom styles for this template -->
     <link href="navbar-static.css" rel="stylesheet">
+
   </head>
   <body>
 
@@ -165,60 +181,102 @@
         <?php
           include 'php/conexao.php';
 
-          if(!empty($_GET['search'])) {
-            $data = $_GET['search'];
-            $sql = "SELECT * FROM evento WHERE nome LIKE '%$data%' or descricao LIKE '%$data%'";
-          }
-        
-          else {
-            $sql = "SELECT * FROM evento";
-          }
+          // Verificar se a chave 'id_usuario' está definida na variável $_SESSION
+          if(isset($_SESSION['email'])) {
+            // Definir a variável $id_usuario com o valor de $_SESSION['id_usuario']
+            $email = $_SESSION['email'];
 
-          // ler todas as linhas da tabela
-          $result = $conexao->query($sql);
-
-          if (!$result) {
-            die("Invalid query: " . $conexao->error);
-          }
-
-          // ler dados de cada linha
-          while($row = $result->fetch_assoc()) {
-            // Definindo estilo CSS com base na prioridade
-            $prioridade_style = '';
-            switch ($row['prioridade']) {
-                case 'Alta':
-                    $prioridade_style = 'background-color: #ffa5a5; color: #640000; border-radius: 10px;';
-                    break;
-                case 'Média':
-                    $prioridade_style = 'background-color: #ffff9a; color: #464500; border-radius: 10px;';
-                    break;
-                case 'Baixa':
-                    $prioridade_style = 'background-color: #7dffba; color: #004720; border-radius: 10px;';
-                    break;
-                default:
-                    $prioridade_style = ''; // Tratamento para outros casos
+            // Ajustando a consulta SQL com a preparação da instrução
+            if (!empty($_GET['search'])) {
+                $data = "%" . $_GET['search'] . "%"; // Adicionando caracteres curinga para pesquisa com LIKE
+                $sql = "SELECT e.*, p.status AS prioridade 
+                FROM evento e
+                INNER JOIN prioridade p ON e.id_prioridade = p.id_prioridade
+                INNER JOIN usuario u ON e.id_usuario = u.id_usuario
+                WHERE u.email = ?
+                AND (e.nome LIKE ? OR e.descricao LIKE ?)
+                ORDER BY e.data";
+                
+            } else {
+                $sql = "SELECT e.*, p.status AS prioridade 
+                FROM evento e
+                INNER JOIN prioridade p ON e.id_prioridade = p.id_prioridade
+                INNER JOIN usuario u ON e.id_usuario = u.id_usuario
+                WHERE u.email = ?
+                ORDER BY e.data";
             }
-          
-            // Exibindo os dados na tabela HTML
-            echo "<tr>
-                <td>{$row['nome']}</td>
-                <td style='max-width:200px'>{$row['descricao']}</td>
-                <td>{$row['hr_inicio']}</td>
-                <td>{$row['hr_termino']}</td>
-                <td>{$row['data']}</td>
-                <td>
-                    <span style='{$prioridade_style} padding: 5px;'>{$row['prioridade']}</span>
-                </td>
-                <td>
-                    <a class='btn btn-primary btn-sm' href='php/editar-evento.php?id_evento={$row['id_evento']}'>
-                        <i class='fa-solid fa-pen-to-square'></i>
-                    </a>
-                    <a class='btn btn-danger btn-sm' href='php/excluir-evento.php?id_evento={$row['id_evento']}'>
-                        <i class='fa-solid fa-trash-can'></i>
-                    </a>
-                </td>
-            </tr>";
-        }
+
+            // Preparar a instrução SQL
+            $stmt = $conexao->prepare($sql);
+
+            // Verificar se a preparação da instrução foi bem sucedida
+            if ($stmt) {
+                if (!empty($_GET['search'])) {
+                    // Vincular o valor do ID do usuário e os valores de pesquisa à instrução preparada
+                    $stmt->bind_param("sss", $email, $data, $data);
+                } else {
+                    // Vincular o valor do ID do usuário à instrução preparada
+                    $stmt->bind_param("s", $email);
+                }
+
+                // Executar a instrução preparada
+                $stmt->execute();
+
+                // Obter o resultado da consulta
+                $result = $stmt->get_result();
+
+                // Verificar se a consulta retornou resultados
+                if ($result) {
+                    // Processar os resultados da consulta
+                    while ($row = $result->fetch_assoc()) {
+                        // Definindo estilo CSS com base na prioridade
+                        $prioridade_style = '';
+                        switch ($row['prioridade']) {
+                            case 'Alta':
+                                $prioridade_style = 'background-color: #ffa5a5; color: #640000; border-radius: 10px;';
+                                break;
+                            case 'Média':
+                                $prioridade_style = 'background-color: #ffff9a; color: #464500; border-radius: 10px;';
+                                break;
+                            case 'Baixa':
+                                $prioridade_style = 'background-color: #7dffba; color: #004720; border-radius: 10px;';
+                                break;
+                            default:
+                                $prioridade_style = ''; // Tratamento para outros casos
+                        }
+                      
+                        // Exibindo os dados na tabela HTML
+                        echo "<tr>
+                                <td>{$row['nome']}</td>
+                                <td style='max-width:200px'>{$row['descricao']}</td>
+                                <td>{$row['hr_inicio']}</td>
+                                <td>{$row['hr_termino']}</td>
+                                <td>{$row['data']}</td>
+                                <td>
+                                    <span style='{$prioridade_style} padding: 5px;'>{$row['prioridade']}</span>
+                                </td>
+                                <td>
+                                    <a class='btn btn-primary btn-sm' href='php/editar-evento.php?id_evento={$row['id_evento']}'>
+                                        <i class='fa-solid fa-pen-to-square'></i>
+                                    </a>
+                                    <a class='btn btn-danger btn-sm' href='php/excluir-evento.php?id_evento={$row['id_evento']}'>
+                                        <i class='fa-solid fa-trash-can'></i>
+                                    </a>
+                                </td>
+                            </tr>";
+                    }
+                } else {
+                    // Lidar com o caso de consulta sem resultados
+                }
+
+                // Fechar a instrução preparada
+                $stmt->close();
+            } else {
+                // Lidar com o caso de falha na preparação da instrução SQL
+            }
+          } else {
+            // Lidar com o caso em que $_SESSION['id_usuario'] não está definida
+          }
         ?>
 
       </tbody>

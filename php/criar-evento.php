@@ -1,4 +1,17 @@
 <?php
+    session_start();//Inicia uma nova sessão ou resume uma sessão existente
+
+    if((!isset ($_SESSION['email']) == true) and (!isset ($_SESSION['senha']) == true))
+    {
+        session_unset();//remove todas as variáveis de sessão
+        echo "<script>
+            alert('Esta página só pode ser acessada por usuário logado');
+            window.location.href = 'php/index.php';
+            </script>";
+
+    }
+    $logado = $_SESSION['email'];
+
     include "conexao.php";
 
     $nome = "";
@@ -11,44 +24,79 @@
     $errorMessage = "";
     $successMessage = "";
 
-    if ( $_SERVER['REQUEST_METHOD'] == 'POST' ) {
+    // Verifica se o formulário foi submetido via POST
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        // Verifica se o email do usuário está presente na sessão
+        if(isset($_SESSION['email']) && !empty($_SESSION['email'])) {
+            $email = $_SESSION['email'];
+
+            // Consulta para obter o ID do usuário com base no email
+            $sql_usuario = "SELECT id_usuario FROM usuario WHERE email = ?";
+            $stmt_usuario = $conexao->prepare($sql_usuario);
+            $stmt_usuario->bind_param("s", $email);
+            $stmt_usuario->execute();
+            $result_usuario = $stmt_usuario->get_result();
+
+            // Verifica se o usuário foi encontrado
+            if ($result_usuario->num_rows > 0) {
+                $row_usuario = $result_usuario->fetch_assoc();
+                $id_usuario = $row_usuario['id_usuario']; // Obtém o ID do usuário
+            } else {
+                // Trate o caso em que o usuário não foi encontrado
+                $errorMessage = "Usuário não encontrado";
+            }
+        } else {
+            // Trate o caso em que o email não está presente na sessão
+            $errorMessage = "Email do usuário não encontrado na sessão";
+        }
+
         // Pega os dados do formulário
         $nome = $_POST["nome"];
         $descricao = $_POST["descricao"];
         $hr_inicio = $_POST["hr_inicio"];
         $hr_termino = $_POST["hr_termino"];
         $data = $_POST["data"];
-        $prioridade = $_POST["prioridade"];
+
+        // Verifica se $_POST["prioridade"] está definido, se não, define como vazio
+        $prioridade_value = isset($_POST["prioridade"]) && !empty($_POST["prioridade"]) ? $_POST["prioridade"] : "";
 
         do {
-            if ( empty($nome) || empty($descricao) || empty($hr_inicio) || empty($hr_termino) || empty($data) || empty($prioridade) ) {
+
+            if (empty($nome) || empty($descricao) || empty($hr_inicio) || empty($hr_termino) || empty($data) || empty($prioridade_value)) {
                 $errorMessage = "Preencha todos os campos";
                 break;
             }
 
-            // Adicionar novo evento ao banco de dados
-            $sql = "INSERT INTO evento (nome, descricao, hr_inicio, hr_termino, data, prioridade)
-                    VALUES ('$nome', '$descricao', '$hr_inicio', '$hr_termino', '$data', '$prioridade')";
+            // Verifica se a prioridade selecionada corresponde a um ID de prioridade na tabela
+            $sql_prioridade = "SELECT status FROM prioridade WHERE id_prioridade = ?";
+            $stmt_prioridade = $conexao->prepare($sql_prioridade);
+            $stmt_prioridade->bind_param("i", $prioridade_value);
+            $stmt_prioridade->execute();
+            $result_prioridade = $stmt_prioridade->get_result();
 
-            $result = $conexao->query($sql);
-
-            if (!$result) {
-                $errorMessage = "Invalid query: " . $conexao->error;
-                break;
+            if ($result_prioridade->num_rows > 0) {
+                $row_prioridade = $result_prioridade->fetch_assoc();
+                $prioridade = $row_prioridade['status']; // Obtém o nome da prioridade correspondente ao ID
+            } else {
+                $errorMessage = "Prioridade selecionada não encontrada";
             }
 
-            $nome = "";
-            $descricao = "";
-            $hr_inicio = "";
-            $hr_termino = "";
-            $data = "";
-            $prioridade = "";
+            // Se a prioridade foi encontrada, prosseguir com a inserção do evento
+            if (!empty($prioridade) && isset($id_usuario)) {
+                $sql_evento = "INSERT INTO evento (nome, descricao, hr_inicio, hr_termino, data, id_prioridade, id_usuario)
+                            VALUES (?, ?, ?, ?, ?, ?, ?)";
+                $stmt_evento = $conexao->prepare($sql_evento);
+                $stmt_evento->bind_param("sssssii", $nome, $descricao, $hr_inicio, $hr_termino, $data, $prioridade_value, $id_usuario);
+                $result_evento = $stmt_evento->execute();
 
-            $successMessage = "Evento adicionado com sucesso";
-
-            header("location: ../agenda.php");
-            exit;
-
+                if ($result_evento) {
+                    $successMessage = "Evento adicionado com sucesso";
+                    header("location: ../agenda.php");
+                    exit;
+                } else {
+                    $errorMessage = "Erro ao adicionar evento";
+                }
+            }
         } while (false);
     }
 ?>
@@ -82,6 +130,8 @@
         ?>
 
         <form method="POST">
+            <input type="hidden" name="id_usuario" value="<?php echo $id_usuario; ?>">
+
             <div class="row mb-3">
                 <label class="col-sm-3 col-form-label">Nome</label>
                 <div class="col-sm-6">
@@ -99,7 +149,7 @@
             <div class="row mb-3">
                 <label class="col-sm-3 col-form-label">Hora de Início</label>
                 <div class="col-sm-6">
-                    <input type="text" class="form-control" name="hr_inicio" value="<?php echo $hr_inicio; ?>">
+                    <input type="text" class="form-control" name="hr_inicio" value="<?php echo $hr_inicio; ?> ">
                 </div>
             </div>
 
@@ -119,8 +169,10 @@
 
             <div class="row mb-3">
                 <label class="col-sm-3 col-form-label">Prioridade</label>
-                <div class="col-sm-6">
-                    <input type="text" class="form-control" name="prioridade" value="<?php echo $prioridade; ?>">
+                <div class="col-sm-6" style="margin-top:10px">
+                    <input type="radio" class="opcoes" name="prioridade" id="alta" value="1"> <label for="alta" style="font-size:17px;margin-left:10px">Alta</label><br>
+                    <input type="radio" class="opcoes" name="prioridade" id="media" value="2"> <label for="media" style="font-size:17px;margin-left:10px">Média</label><br>
+                    <input type="radio" class="opcoes" name="prioridade" id="baixa" value="3"> <label for="baixa" style="font-size:17px;margin-left:10px">Baixa</label><br>
                 </div>
             </div>
 
