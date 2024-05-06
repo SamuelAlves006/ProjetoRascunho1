@@ -30,3 +30,18 @@ body {
     height: 18px;
     width: 18px;
 }
+
+.cinza {
+    color: gray;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.container .col-form-label {
+    font-weight: 500;
+    font-size: 17px
+}
+
+.container input[type="text"] {
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 0px 0px 1px, rgb(209, 213, 219) 0px 0px 0px 1px inset;
+}

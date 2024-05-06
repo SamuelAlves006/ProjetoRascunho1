@@ -189,7 +189,7 @@
             // Ajustando a consulta SQL com a preparação da instrução
             if (!empty($_GET['search'])) {
                 $data = "%" . $_GET['search'] . "%"; // Adicionando caracteres curinga para pesquisa com LIKE
-                $sql = "SELECT e.*, p.status AS prioridade 
+                $sql = "SELECT e.*, p.status AS prioridade, DATE_FORMAT(e.data, '%d/%m/%Y') AS data_formatada
                 FROM evento e
                 INNER JOIN prioridade p ON e.id_prioridade = p.id_prioridade
                 INNER JOIN usuario u ON e.id_usuario = u.id_usuario
@@ -198,7 +198,7 @@
                 ORDER BY e.data";
                 
             } else {
-                $sql = "SELECT e.*, p.status AS prioridade 
+                $sql = "SELECT e.*, p.status AS prioridade, DATE_FORMAT(e.data, '%d/%m/%Y') AS data_formatada
                 FROM evento e
                 INNER JOIN prioridade p ON e.id_prioridade = p.id_prioridade
                 INNER JOIN usuario u ON e.id_usuario = u.id_usuario
@@ -247,11 +247,11 @@
                       
                         // Exibindo os dados na tabela HTML
                         echo "<tr>
-                                <td>{$row['nome']}</td>
+                                <td style='max-width:200px'>{$row['nome']}</td>
                                 <td style='max-width:200px'>{$row['descricao']}</td>
-                                <td>{$row['hr_inicio']}</td>
-                                <td>{$row['hr_termino']}</td>
-                                <td>{$row['data']}</td>
+                                <td>" . date("H:i", strtotime($row['hr_inicio'])) . "</td>
+                                <td>" . date("H:i", strtotime($row['hr_termino'])) . "</td>
+                                <td>{$row['data_formatada']}</td>
                                 <td>
                                     <span style='{$prioridade_style} padding: 5px;'>{$row['prioridade']}</span>
                                 </td>

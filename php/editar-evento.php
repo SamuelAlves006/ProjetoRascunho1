@@ -1,97 +1,111 @@
 <?php
-    $servidor = 'localhost';
-    $usuario = 'root';
-    $senha = '';
-    $dbname = 'planifynow';
+$servidor = 'localhost';
+$usuario = 'root';
+$senha = '';
+$dbname = 'planifynow';
+
+// Criar conexão
+$conexao = new mysqli($servidor, $usuario, $senha, $dbname);
+
+$id_evento = "";
+$nome = "";
+$descricao = "";
+$hr_inicio = "";
+$hr_termino = "";
+$data = "";
+$prioridade = "";
+$prioridade_nome = "";
+
+$errorMessage = "";
+$successMessage = "";
+
+if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+    // GET method: Mostrar os dados do evento
+
+    if (!isset($_GET["id_evento"])) {
+        header("location: ../agenda.php");
+        exit;
+    }
+
+    $id_evento = $_GET["id_evento"];
+
+    // ler a linha do evento selecionado da tabela de eventos
+    $sql = "SELECT evento.*, DATE_FORMAT(data, '%d/%m/%Y') AS data_formatada, prioridade.status AS prioridade_nome FROM evento 
+            INNER JOIN prioridade ON evento.id_prioridade = prioridade.id_prioridade 
+            WHERE id_evento = $id_evento";
+    $result = $conexao->query($sql);
+    $row = $result->fetch_assoc();
+
+    if (!$row) {
+        header("location: ../agenda.php");
+        exit;
+    }
+
+    $nome = $row["nome"];
+    $descricao = $row["descricao"];
+    $hr_inicio = date("H:i", strtotime($row["hr_inicio"]));
+    $hr_termino = date("H:i", strtotime($row["hr_termino"]));
+    $data = $row["data_formatada"];
+    // Define $prioridade como vazio quando o método da requisição é GET
+    $prioridade_nome = $row["prioridade_nome"];
     
-    // Criar conexão
-    $conexao = new mysqli($servidor, $usuario, $senha, $dbname);
+} else {
+    // POST method: Update the data of the event
 
-    $id_evento = "";
-    $nome = "";
-    $descricao = "";
-    $hr_inicio = "";
-    $hr_termino = "";
-    $data = "";
-    $prioridade = "";
-    $prioridade_nome = "";
+    $id_evento = $_POST["id_evento"];
+    $nome = $_POST["nome"];
+    $descricao = $_POST["descricao"];
+    $hr_inicio = $_POST["hr_inicio"];
+    $hr_termino = $_POST["hr_termino"];
+    $data = $_POST["data"];
+    $prioridade = isset($_POST["prioridade"]) ? $_POST["prioridade"] : "";
 
-    $errorMessage = "";
-    $successMessage = "";
-
-    if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-        // GET method: Mostrar os dados do evento
-
-        if (!isset($_GET["id_evento"])) {
-            header("location: ../agenda.php");
-            exit;
-        }
-
-        $id_evento = $_GET["id_evento"];
-
-        // ler a linha do evento selecionado da tabela de eventos
-        $sql = "SELECT evento.*, prioridade.status AS prioridade_nome FROM evento 
-                INNER JOIN prioridade ON evento.id_prioridade = prioridade.id_prioridade 
-                WHERE id_evento = $id_evento";
-        $result = $conexao->query($sql);
-        $row = $result->fetch_assoc();
-
-        if (!$row) {
-            header("location: ../agenda.php");
-            exit;
-        }
-
-        $nome = $row["nome"];
-        $descricao = $row["descricao"];
-        $hr_inicio = $row["hr_inicio"];
-        $hr_termino = $row["hr_termino"];
-        $data = $row["data"];
-        // Define $prioridade como vazio quando o método da requisição é GET
-        $prioridade_nome = $row["prioridade_nome"];
+    // Verificar se todos os campos foram preenchidos
+    if (empty($id_evento) || empty($nome) || empty($descricao) || empty($hr_inicio) || empty($hr_termino) || empty($data) || empty($prioridade)) {
+        $errorMessage = "Preencha todos os campos";
+    } elseif ($hr_inicio >= $hr_termino) {
+        $errorMessage = "A hora de início deve ser menor do que a hora de término";
+    } elseif (!validarFormatoData($data)) {
+        $errorMessage = "Formato de data inválido. Use o formato dd/mm/yyyy.";
     } else {
-        // POST method: Update the data of the event
-    
-        $id_evento = $_POST["id_evento"];
-        $nome = $_POST["nome"];
-        $descricao = $_POST["descricao"];
-        $hr_inicio = $_POST["hr_inicio"];
-        $hr_termino = $_POST["hr_termino"];
-        $data = $_POST["data"];
-        $prioridade = isset($_POST["prioridade"]) ? $_POST["prioridade"] : "";
-    
-        // Verificar se todos os campos foram preenchidos
-        if (empty($id_evento) || empty($nome) || empty($descricao) || empty($hr_inicio) || empty($hr_termino) || empty($data) || empty($prioridade)) {
-            $errorMessage = "Preencha todos os campos";
-        } else {
-            // Verificar se a prioridade selecionada é válida
-            $sql_prioridade = "SELECT COUNT(*) AS total FROM prioridade WHERE id_prioridade = ?";
-            $stmt = $conexao->prepare($sql_prioridade);
-            $stmt->bind_param("i", $prioridade);
-            $stmt->execute();
-            $result_prioridade = $stmt->get_result();
-            $row_prioridade = $result_prioridade->fetch_assoc();
-    
-            if ($row_prioridade["total"] == 1) {
-                // Consulta de atualização usando o ID da prioridade
-                $sql_update = "UPDATE evento 
-                               SET nome = ?, descricao = ?, hr_inicio = ?, hr_termino = ?, data = ?, id_prioridade = ? 
-                               WHERE id_evento = ?";
-                $stmt = $conexao->prepare($sql_update);
-                $stmt->bind_param("sssssii", $nome, $descricao, $hr_inicio, $hr_termino, $data, $prioridade, $id_evento);
-    
-                if ($stmt->execute()) {
-                    $successMessage = "Evento atualizado com sucesso";
-                    header("location: ../agenda.php");
-                    exit;
-                } else {
-                    $errorMessage = "Erro ao atualizar o evento: " . $conexao->error;
-                }
+        // Verificar se a prioridade selecionada é válida
+        $sql_prioridade = "SELECT COUNT(*) AS total FROM prioridade WHERE id_prioridade = ?";
+        $stmt = $conexao->prepare($sql_prioridade);
+        $stmt->bind_param("i", $prioridade);
+        $stmt->execute();
+        $result_prioridade = $stmt->get_result();
+        $row_prioridade = $result_prioridade->fetch_assoc();
+
+        if ($row_prioridade["total"] == 1) {
+            // Formatar a data para o formato MySQL
+            $data_mysql = date("Y-m-d", strtotime(str_replace('/', '-', $data)));
+
+            // Consulta de atualização usando o ID da prioridade
+            $sql_update = "UPDATE evento 
+                        SET nome = ?, descricao = ?, hr_inicio = ?, hr_termino = ?, data = ?, id_prioridade = ? 
+                        WHERE id_evento = ?";
+            $stmt = $conexao->prepare($sql_update);
+            $stmt->bind_param("sssssii", $nome, $descricao, $hr_inicio, $hr_termino, $data_mysql, $prioridade, $id_evento);
+
+            if ($stmt->execute()) {
+                $successMessage = "Evento atualizado com sucesso";
+                header("location: ../agenda.php");
+                exit;
             } else {
-                $errorMessage = "Prioridade selecionada inválida. Por favor, selecione uma prioridade válida.";
+                $errorMessage = "Erro ao atualizar o evento: " . $conexao->error;
             }
+        } else {
+            $errorMessage = "Prioridade selecionada inválida. Por favor, selecione uma prioridade válida.";
         }
-    
-    }    
+    }
+}
+
+// Função para validar o formato da data
+function validarFormatoData($date)
+{
+    $dateObj = DateTime::createFromFormat('d/m/Y', $date);
+    return $dateObj && $dateObj->format('d/m/Y') === $date;
+}
 ?>
 
 <!DOCTYPE html>
@@ -138,21 +152,21 @@
             </div>
             
             <div class="row mb-3">
-                <label class="col-sm-3 col-form-label">Hora de Início</label>
+                <label class="col-sm-3 col-form-label">Hora de Início<br><h3 class="cinza">Exemplo: 09:30</h3></label>
                 <div class="col-sm-6">
                     <input type="text" class="form-control" name="hr_inicio" value="<?php echo $hr_inicio; ?>">
                 </div>
             </div>
 
             <div class="row mb-3">
-                <label class="col-sm-3 col-form-label">Hora de Término</label>
+                <label class="col-sm-3 col-form-label">Hora de Término<br><h3 class="cinza">Exemplo: 11:30</h3></label>
                 <div class="col-sm-6">
                     <input type="text" class="form-control" name="hr_termino" value="<?php echo $hr_termino; ?>">
                 </div>
             </div>
 
             <div class="row mb-3">
-                <label class="col-sm-3 col-form-label">Data</label>
+                <label class="col-sm-3 col-form-label">Data<br><h3 class="cinza">Exemplo: 12/05/2024</h3></label>
                 <div class="col-sm-6">
                     <input type="text" class="form-control" name="data" value="<?php echo $data; ?>">
                 </div>

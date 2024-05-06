@@ -1,106 +1,108 @@
 <?php
-    session_start();//Inicia uma nova sessão ou resume uma sessão existente
+session_start(); // Inicia uma nova sessão ou resume uma sessão existente
 
-    if((!isset ($_SESSION['email']) == true) and (!isset ($_SESSION['senha']) == true))
-    {
-        session_unset();//remove todas as variáveis de sessão
-        echo "<script>
+if ((!isset($_SESSION['email']) == true) and (!isset($_SESSION['senha']) == true)) {
+    session_unset(); // Remove todas as variáveis de sessão
+    echo "<script>
             alert('Esta página só pode ser acessada por usuário logado');
             window.location.href = 'php/index.php';
             </script>";
+}
 
-    }
-    $logado = $_SESSION['email'];
+$logado = $_SESSION['email'];
 
-    include "conexao.php";
+include "conexao.php";
 
-    $nome = "";
-    $descricao = "";
-    $hr_inicio = "";
-    $hr_termino = "";
-    $data = "";
-    $prioridade = "";
+$nome = "";
+$descricao = "";
+$hr_inicio = "";
+$hr_termino = "";
+$data = "";
+$prioridade = "";
 
-    $errorMessage = "";
-    $successMessage = "";
+$errorMessage = "";
+$successMessage = "";
 
-    // Verifica se o formulário foi submetido via POST
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        // Verifica se o email do usuário está presente na sessão
-        if(isset($_SESSION['email']) && !empty($_SESSION['email'])) {
-            $email = $_SESSION['email'];
+// Verifica se o formulário foi submetido via POST
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Verifica se o email do usuário está presente na sessão
+    if (isset($_SESSION['email']) && !empty($_SESSION['email'])) {
+        $email = $_SESSION['email'];
 
-            // Consulta para obter o ID do usuário com base no email
-            $sql_usuario = "SELECT id_usuario FROM usuario WHERE email = ?";
-            $stmt_usuario = $conexao->prepare($sql_usuario);
-            $stmt_usuario->bind_param("s", $email);
-            $stmt_usuario->execute();
-            $result_usuario = $stmt_usuario->get_result();
+        // Consulta para obter o ID do usuário com base no email
+        $sql_usuario = "SELECT id_usuario FROM usuario WHERE email = ?";
+        $stmt_usuario = $conexao->prepare($sql_usuario);
+        $stmt_usuario->bind_param("s", $email);
+        $stmt_usuario->execute();
+        $result_usuario = $stmt_usuario->get_result();
 
-            // Verifica se o usuário foi encontrado
-            if ($result_usuario->num_rows > 0) {
-                $row_usuario = $result_usuario->fetch_assoc();
-                $id_usuario = $row_usuario['id_usuario']; // Obtém o ID do usuário
-            } else {
-                // Trate o caso em que o usuário não foi encontrado
-                $errorMessage = "Usuário não encontrado";
-            }
+        // Verifica se o usuário foi encontrado
+        if ($result_usuario->num_rows > 0) {
+            $row_usuario = $result_usuario->fetch_assoc();
+            $id_usuario = $row_usuario['id_usuario']; // Obtém o ID do usuário
         } else {
-            // Trate o caso em que o email não está presente na sessão
-            $errorMessage = "Email do usuário não encontrado na sessão";
+            // Trate o caso em que o usuário não foi encontrado
+            $errorMessage = "Usuário não encontrado";
         }
-
-        // Pega os dados do formulário
-        $nome = $_POST["nome"];
-        $descricao = $_POST["descricao"];
-        $hr_inicio = $_POST["hr_inicio"];
-        $hr_termino = $_POST["hr_termino"];
-        $data = $_POST["data"];
-
-        // Verifica se $_POST["prioridade"] está definido, se não, define como vazio
-        $prioridade_value = isset($_POST["prioridade"]) && !empty($_POST["prioridade"]) ? $_POST["prioridade"] : "";
-
-        do {
-
-            if (empty($nome) || empty($descricao) || empty($hr_inicio) || empty($hr_termino) || empty($data) || empty($prioridade_value)) {
-                $errorMessage = "Preencha todos os campos";
-                break;
-            }
-
-            // Verifica se a prioridade selecionada corresponde a um ID de prioridade na tabela
-            $sql_prioridade = "SELECT status FROM prioridade WHERE id_prioridade = ?";
-            $stmt_prioridade = $conexao->prepare($sql_prioridade);
-            $stmt_prioridade->bind_param("i", $prioridade_value);
-            $stmt_prioridade->execute();
-            $result_prioridade = $stmt_prioridade->get_result();
-
-            if ($result_prioridade->num_rows > 0) {
-                $row_prioridade = $result_prioridade->fetch_assoc();
-                $prioridade = $row_prioridade['status']; // Obtém o nome da prioridade correspondente ao ID
-            } else {
-                $errorMessage = "Prioridade selecionada não encontrada";
-            }
-
-            // Se a prioridade foi encontrada, prosseguir com a inserção do evento
-            if (!empty($prioridade) && isset($id_usuario)) {
-                $sql_evento = "INSERT INTO evento (nome, descricao, hr_inicio, hr_termino, data, id_prioridade, id_usuario)
-                            VALUES (?, ?, ?, ?, ?, ?, ?)";
-                $stmt_evento = $conexao->prepare($sql_evento);
-                $stmt_evento->bind_param("sssssii", $nome, $descricao, $hr_inicio, $hr_termino, $data, $prioridade_value, $id_usuario);
-                $result_evento = $stmt_evento->execute();
-
-                if ($result_evento) {
-                    $successMessage = "Evento adicionado com sucesso";
-                    header("location: ../agenda.php");
-                    exit;
-                } else {
-                    $errorMessage = "Erro ao adicionar evento";
-                }
-            }
-        } while (false);
+    } else {
+        // Trate o caso em que o email não está presente na sessão
+        $errorMessage = "Email do usuário não encontrado na sessão";
     }
-?>
 
+    // Pega os dados do formulário
+    $nome = $_POST["nome"];
+    $descricao = $_POST["descricao"];
+    $hr_inicio = $_POST["hr_inicio"];
+    $hr_termino = $_POST["hr_termino"];
+    $data = $_POST["data"];
+
+    // Verifica se $_POST["prioridade"] está definido, se não, define como vazio
+    $prioridade_value = isset($_POST["prioridade"]) && !empty($_POST["prioridade"]) ? $_POST["prioridade"] : "";
+
+    // Função para validar o formato de data
+    function validateDate($date, $format = 'd/m/Y')
+    {
+        $d = DateTime::createFromFormat($format, $date);
+        return $d && $d->format($format) === $date;
+    }
+
+    // Verifica se a data foi inserida no formato correto (dd/mm/yyyy)
+    if (!validateDate($data)) {
+        $errorMessage = "Formato de data inválido. Use o formato dd/mm/yyyy.";
+    } elseif (empty($prioridade_value)) {
+        // Se a prioridade estiver em branco, exiba uma mensagem de erro
+        $errorMessage = "Preencha todos os campos, incluindo a prioridade";
+    } elseif (strtotime($hr_inicio) > strtotime($hr_termino)) {
+        $errorMessage = "A hora de início deve ser menor do que a hora de término";
+    } else {
+        // Converte a data para o formato do MySQL
+        $data_mysql = DateTime::createFromFormat('d/m/Y', $data)->format('Y-m-d');
+
+        // Insira a data no banco de dados
+        $sql_evento = "INSERT INTO evento (nome, descricao, hr_inicio, hr_termino, data, id_prioridade, id_usuario)
+        VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $stmt_evento = $conexao->prepare($sql_evento);
+        if (!$stmt_evento) {
+            $errorMessage = "Erro na preparação da declaração SQL: " . $conexao->error;
+        } else {
+            $stmt_evento->bind_param("sssssii", $nome, $descricao, $hr_inicio, $hr_termino, $data_mysql, $prioridade_value, $id_usuario);
+            $result_evento = $stmt_evento->execute();
+
+            if ($result_evento) {
+                $successMessage = "Evento adicionado com sucesso";
+                header("location: ../agenda.php");
+                exit;
+            } else {
+                $errorMessage = "Erro ao adicionar evento";
+            }
+        }
+    }
+
+    if (empty($nome) || empty($descricao) || empty($hr_inicio) || empty($hr_termino) || empty($data)) {
+        $errorMessage = "Preencha todos os campos";
+    }
+}
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -147,21 +149,21 @@
             </div>
             
             <div class="row mb-3">
-                <label class="col-sm-3 col-form-label">Hora de Início</label>
+                <label class="col-sm-3 col-form-label">Hora de Início<br><h3 class="cinza">Exemplo: 09:30</h3></label>
                 <div class="col-sm-6">
                     <input type="text" class="form-control" name="hr_inicio" value="<?php echo $hr_inicio; ?> ">
                 </div>
             </div>
 
             <div class="row mb-3">
-                <label class="col-sm-3 col-form-label">Hora de Término</label>
+                <label class="col-sm-3 col-form-label">Hora de Término<br><h3 class="cinza">Exemplo: 11:30</h3></label>
                 <div class="col-sm-6">
                     <input type="text" class="form-control" name="hr_termino" value="<?php echo $hr_termino; ?>">
                 </div>
             </div>
 
             <div class="row mb-3">
-                <label class="col-sm-3 col-form-label">Data</label>
+                <label class="col-sm-3 col-form-label">Data<br><h3 class="cinza">Exemplo: 12/05/2024</h3></label>
                 <div class="col-sm-6">
                     <input type="text" class="form-control" name="data" value="<?php echo $data; ?>">
                 </div>
