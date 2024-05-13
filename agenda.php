@@ -277,6 +277,11 @@
           } else {
             // Lidar com o caso em que $_SESSION['id_usuario'] não está definida
           }
+
+          // Passar os eventos para o JavaScript
+          echo "<script>";
+          echo "var eventos = " . json_encode($eventos) . ";"; // Passando os eventos para o JavaScript
+          echo "</script>";
         ?>
 
       </tbody>
