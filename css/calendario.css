@@ -183,12 +183,25 @@ button {
 
 .date:hover {
   background: #e7e7e7;
-  color: black;
+
 }
 
 .date.active {
-  background: #897eff;
-  color: white;
+  position: relative;
+  color: rgb(0, 0, 0);
+}
+
+.date.active::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border: 3px solid #897eff;
+  border-radius: 50%;
+  box-sizing: border-box;
 }
 
 .date.inactive {
@@ -200,7 +213,13 @@ button {
 }
 
 .date.has-event {
-  background-color: #ffcc00;
-  color: #000;
+  background-color: #897eff;
+  color: #ffffff;
   border-radius: 50%;
+}
+
+.modal-body p {
+  border-left: #897eff 3px solid;
+  margin-left: 10px;
+  padding-left: 10px;
 }

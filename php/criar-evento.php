@@ -25,27 +25,23 @@ $successMessage = "";
 
 // Verifica se o formulário foi submetido via POST
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Verifica se o email do usuário está presente na sessão
+
     if (isset($_SESSION['email']) && !empty($_SESSION['email'])) {
         $email = $_SESSION['email'];
 
-        // Consulta para obter o ID do usuário com base no email
         $sql_usuario = "SELECT id_usuario FROM usuario WHERE email = ?";
         $stmt_usuario = $conexao->prepare($sql_usuario);
         $stmt_usuario->bind_param("s", $email);
         $stmt_usuario->execute();
         $result_usuario = $stmt_usuario->get_result();
 
-        // Verifica se o usuário foi encontrado
         if ($result_usuario->num_rows > 0) {
             $row_usuario = $result_usuario->fetch_assoc();
-            $id_usuario = $row_usuario['id_usuario']; // Obtém o ID do usuário
+            $id_usuario = $row_usuario['id_usuario'];
         } else {
-            // Trate o caso em que o usuário não foi encontrado
             $errorMessage = "Usuário não encontrado";
         }
     } else {
-        // Trate o caso em que o email não está presente na sessão
         $errorMessage = "Email do usuário não encontrado na sessão";
     }
 
@@ -56,10 +52,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $hr_termino = $_POST["hr_termino"];
     $data = $_POST["data"];
 
-    // Verifica se $_POST["prioridade"] está definido, se não, define como vazio
+    // Isso aqui verifica se $_POST["prioridade"] está definido, se não tiver, define como vazio
     $prioridade_value = isset($_POST["prioridade"]) && !empty($_POST["prioridade"]) ? $_POST["prioridade"] : "";
 
-    // Função para validar o formato de data
     function validateDate($date, $format = 'd/m/Y')
     {
         $d = DateTime::createFromFormat($format, $date);
@@ -70,7 +65,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!validateDate($data)) {
         $errorMessage = "Formato de data inválido. Use o formato dd/mm/yyyy.";
     } elseif (empty($prioridade_value)) {
-        // Se a prioridade estiver em branco, exiba uma mensagem de erro
         $errorMessage = "Preencha todos os campos, incluindo a prioridade";
     } elseif (strtotime($hr_inicio) > strtotime($hr_termino)) {
         $errorMessage = "A hora de início deve ser menor do que a hora de término";
@@ -78,7 +72,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Converte a data para o formato do MySQL
         $data_mysql = DateTime::createFromFormat('d/m/Y', $data)->format('Y-m-d');
 
-        // Insira a data no banco de dados
         $sql_evento = "INSERT INTO evento (nome, descricao, hr_inicio, hr_termino, data, id_prioridade, id_usuario)
         VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt_evento = $conexao->prepare($sql_evento);

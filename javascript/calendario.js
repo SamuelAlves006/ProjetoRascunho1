@@ -4,16 +4,29 @@ const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
 
 let currentDate = new Date();
+let eventos = []; // Array para armazenar os eventos
+
+const formatDate = (dateString) => {
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+};
+
+const formatTime = (timeString) => {
+    const [hour, minute] = timeString.split(':');
+    return `${hour}:${minute}`;
+};
 
 const updateCalendar = () => {
-    // Faça uma solicitação AJAX para obter os eventos agendados para o mês atual
-    fetch('./php/eventos-calendario.php')
+    // usando o AJAX para obter os eventos agendados para o mês atual
+    fetch('php/eventos-calendario.php')
         .then(response => response.json())
         .then(data => {
-            // Adicione uma classe 'has-event' aos dias com eventos
-            data.forEach(event => {
+            eventos = data; // Armazena os eventos recebidos
+            // Esse trecho faz com que seja adicionado uma classe chamada 'has-event' nos dias com eventos
+            eventos.forEach(event => {
                 const eventDate = new Date(event.data);
                 const dayElement = datesElement.querySelector(`.date[data-date="${eventDate.toISOString().split('T')[0]}"]`);
+                
                 if (dayElement) {
                     dayElement.classList.add('has-event');
                 }
@@ -26,7 +39,7 @@ const updateCalendar = () => {
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth();
 
-    const firstDay = new Date(currentYear, currentMonth, 1); // Corrigido para começar no dia 1
+    const firstDay = new Date(currentYear, currentMonth, 0);
     const lastDay = new Date(currentYear, currentMonth + 1, 0);
     const totalDays = lastDay.getDate();
     const firstDayIndex = firstDay.getDay();
@@ -45,9 +58,9 @@ const updateCalendar = () => {
 
     for (let i = 1; i <= totalDays; i++) {
         const date = new Date(currentYear, currentMonth, i);
-        const dateString = date.toISOString().split('T')[0]; // Adicionado atributo data-date
+        const dateString = date.toISOString().split('T')[0];
         const activeClass = date.toDateString() === new Date().toDateString() ? 'active' : '';
-        datesHTML += `<div class="date ${activeClass}" data-date="${dateString}">${i}</div>`; // Adicionado atributo data-date
+        datesHTML += `<div class="date ${activeClass}" data-date="${dateString}">${i}</div>`;
     }
 
     for (let i = 1; i <= 7 - lastDayIndex; i++) {
@@ -61,11 +74,41 @@ const updateCalendar = () => {
 prevBtn.addEventListener('click', () => {
     currentDate.setMonth(currentDate.getMonth() - 1);
     updateCalendar();
-})
+});
 
 nextBtn.addEventListener('click', () => {
     currentDate.setMonth(currentDate.getMonth() + 1);
     updateCalendar();
-})
+});
+
+// Adicionar o evento de clique após o calendário ser atualizado
+datesElement.addEventListener('click', function(event) {
+    const target = event.target;
+    
+    if (target.classList.contains('has-event')) {
+        const date = target.dataset.date;
+        const detalhesEvento = eventos.find(event => event.data === date);
+
+        if (detalhesEvento) {
+            const dateModal = new bootstrap.Modal(document.getElementById('dateModal'));
+            
+            // Formata a data no formato dd/mm/yyyy
+            const dataFormatada = formatDate(detalhesEvento.data);
+            
+            // Atualiza o conteúdo do modal com os detalhes do evento
+            document.querySelector('#dateModal .modal-title').innerText = `Evento em ${dataFormatada}`;
+            document.querySelector('#dateModal .modal-body').innerHTML = `
+                <p><strong>Nome:</strong> ${detalhesEvento.nome}</p>
+                <p><strong>Descrição:</strong> ${detalhesEvento.descricao}</p>
+                <p><strong>Hora de Início:</strong> ${formatTime(detalhesEvento.hr_inicio)}</p>
+                <p><strong>Hora de Término:</strong> ${formatTime(detalhesEvento.hr_termino)}</p>
+                <p><strong>Prioridade:</strong> ${detalhesEvento.prioridade_status}</p>
+            `;
+            
+            // Exibe o modal
+            dateModal.show();
+        }
+    }
+});
 
 updateCalendar();

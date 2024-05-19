@@ -29,7 +29,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
 
     $id_evento = $_GET["id_evento"];
 
-    // ler a linha do evento selecionado da tabela de eventos
     $sql = "SELECT evento.*, DATE_FORMAT(data, '%d/%m/%Y') AS data_formatada, prioridade.status AS prioridade_nome FROM evento 
             INNER JOIN prioridade ON evento.id_prioridade = prioridade.id_prioridade 
             WHERE id_evento = $id_evento";
@@ -46,11 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     $hr_inicio = date("H:i", strtotime($row["hr_inicio"]));
     $hr_termino = date("H:i", strtotime($row["hr_termino"]));
     $data = $row["data_formatada"];
-    // Define $prioridade como vazio quando o método da requisição é GET
     $prioridade_nome = $row["prioridade_nome"];
     
 } else {
-    // POST method: Update the data of the event
+    // POST method: Atualizar os dados do evento
 
     $id_evento = $_POST["id_evento"];
     $nome = $_POST["nome"];
@@ -68,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     } elseif (!validarFormatoData($data)) {
         $errorMessage = "Formato de data inválido. Use o formato dd/mm/yyyy.";
     } else {
-        // Verificar se a prioridade selecionada é válida
+
         $sql_prioridade = "SELECT COUNT(*) AS total FROM prioridade WHERE id_prioridade = ?";
         $stmt = $conexao->prepare($sql_prioridade);
         $stmt->bind_param("i", $prioridade);
@@ -77,10 +75,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         $row_prioridade = $result_prioridade->fetch_assoc();
 
         if ($row_prioridade["total"] == 1) {
-            // Formatar a data para o formato MySQL
+
             $data_mysql = date("Y-m-d", strtotime(str_replace('/', '-', $data)));
 
-            // Consulta de atualização usando o ID da prioridade
+
             $sql_update = "UPDATE evento 
                         SET nome = ?, descricao = ?, hr_inicio = ?, hr_termino = ?, data = ?, id_prioridade = ? 
                         WHERE id_evento = ?";
@@ -100,7 +98,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
     }
 }
 
-// Função para validar o formato da data
 function validarFormatoData($date)
 {
     $dateObj = DateTime::createFromFormat('d/m/Y', $date);

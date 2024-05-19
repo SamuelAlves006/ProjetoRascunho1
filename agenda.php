@@ -181,14 +181,11 @@
         <?php
           include 'php/conexao.php';
 
-          // Verificar se a chave 'id_usuario' está definida na variável $_SESSION
           if(isset($_SESSION['email'])) {
-            // Definir a variável $id_usuario com o valor de $_SESSION['id_usuario']
             $email = $_SESSION['email'];
 
-            // Ajustando a consulta SQL com a preparação da instrução
             if (!empty($_GET['search'])) {
-                $data = "%" . $_GET['search'] . "%"; // Adicionando caracteres curinga para pesquisa com LIKE
+                $data = "%" . $_GET['search'] . "%";
                 $sql = "SELECT e.*, p.status AS prioridade, DATE_FORMAT(e.data, '%d/%m/%Y') AS data_formatada
                 FROM evento e
                 INNER JOIN prioridade p ON e.id_prioridade = p.id_prioridade
@@ -266,16 +263,20 @@
                             </tr>";
                     }
                 } else {
-                    // Lidar com o caso de consulta sem resultados
+                    echo "Consulta sem resultados!";
                 }
 
                 // Fechar a instrução preparada
                 $stmt->close();
             } else {
-                // Lidar com o caso de falha na preparação da instrução SQL
+                echo "Erro na preparação da instrução SQL";
             }
           } else {
-            // Lidar com o caso em que $_SESSION['id_usuario'] não está definida
+              session_unset();//remove todas as variáveis de sessão
+              echo "<script>
+                  alert('Esta página só pode ser acessada por usuário logado');
+                  window.location.href = 'php/index.php';
+                  </script>";
           }
 
           // Passar os eventos para o JavaScript
