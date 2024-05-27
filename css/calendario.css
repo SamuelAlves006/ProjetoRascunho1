@@ -218,8 +218,14 @@ button {
   border-radius: 50%;
 }
 
-.modal-body p {
+.infoEvento {
   border-left: #897eff 3px solid;
   margin-left: 10px;
   padding-left: 10px;
+  font-size: 15px;
+  margin-bottom: 30px;
+}
+
+.infoEvento p {
+  margin: 2px 0 2px 0;
 }

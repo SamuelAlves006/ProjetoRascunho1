@@ -27,7 +27,8 @@
     WHERE (MONTH(evento.data) = MONTH(NOW()) OR 
             MONTH(evento.data) > MONTH(NOW()) OR 
             (YEAR(evento.data) = YEAR(NOW()) AND MONTH(evento.data) < MONTH(NOW()))) 
-    AND usuario.email = ?";
+    AND usuario.email = ?
+    ORDER BY evento.hr_termino";
 
     // Prepara a declaração SQL
     $stmt = $conn->prepare($sql);

@@ -192,7 +192,7 @@
                 INNER JOIN usuario u ON e.id_usuario = u.id_usuario
                 WHERE u.email = ?
                 AND (e.nome LIKE ? OR e.descricao LIKE ?)
-                ORDER BY e.data";
+                ORDER BY e.data, e.hr_inicio";
                 
             } else {
                 $sql = "SELECT e.*, p.status AS prioridade, DATE_FORMAT(e.data, '%d/%m/%Y') AS data_formatada
@@ -200,7 +200,7 @@
                 INNER JOIN prioridade p ON e.id_prioridade = p.id_prioridade
                 INNER JOIN usuario u ON e.id_usuario = u.id_usuario
                 WHERE u.email = ?
-                ORDER BY e.data";
+                ORDER BY e.data, e.hr_inicio";
             }
 
             // Preparar a instrução SQL

@@ -87,24 +87,31 @@ datesElement.addEventListener('click', function(event) {
     
     if (target.classList.contains('has-event')) {
         const date = target.dataset.date;
-        const detalhesEvento = eventos.find(event => event.data === date);
+        const eventosDoDia = eventos.filter(event => event.data === date);
 
-        if (detalhesEvento) {
+        if (eventosDoDia.length > 0) {
             const dateModal = new bootstrap.Modal(document.getElementById('dateModal'));
-            
-            // Formata a data no formato dd/mm/yyyy
-            const dataFormatada = formatDate(detalhesEvento.data);
-            
-            // Atualiza o conteúdo do modal com os detalhes do evento
-            document.querySelector('#dateModal .modal-title').innerText = `Evento em ${dataFormatada}`;
-            document.querySelector('#dateModal .modal-body').innerHTML = `
-                <p><strong>Nome:</strong> ${detalhesEvento.nome}</p>
-                <p><strong>Descrição:</strong> ${detalhesEvento.descricao}</p>
-                <p><strong>Hora de Início:</strong> ${formatTime(detalhesEvento.hr_inicio)}</p>
-                <p><strong>Hora de Término:</strong> ${formatTime(detalhesEvento.hr_termino)}</p>
-                <p><strong>Prioridade:</strong> ${detalhesEvento.prioridade_status}</p>
-            `;
-            
+
+            // Atualiza o conteúdo do modal com os detalhes dos eventos
+            const modalTitle = document.querySelector('#dateModal .modal-title');
+            const modalBody = document.querySelector('#dateModal .modal-body');
+            modalTitle.innerText = `Eventos em ${formatDate(date)}`;
+            modalBody.innerHTML = '';
+
+            eventosDoDia.forEach(detalhesEvento => {
+                const eventElement = document.createElement('div');
+                eventElement.innerHTML = `
+                    <div class='infoEvento'>
+                        <p><strong>Nome:</strong> ${detalhesEvento.nome}</p>
+                        <p><strong>Descrição:</strong> ${detalhesEvento.descricao}</p>
+                        <p><strong>Hora de Início:</strong> ${formatTime(detalhesEvento.hr_inicio)}</p>
+                        <p><strong>Hora de Término:</strong> ${formatTime(detalhesEvento.hr_termino)}</p>
+                        <p><strong>Prioridade:</strong> ${detalhesEvento.prioridade_status}</p>
+                    </div>
+                `;
+                modalBody.appendChild(eventElement);
+            });
+
             // Exibe o modal
             dateModal.show();
         }
