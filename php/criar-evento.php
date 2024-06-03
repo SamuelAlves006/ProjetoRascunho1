@@ -69,24 +69,35 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } elseif (strtotime($hr_inicio) > strtotime($hr_termino)) {
         $errorMessage = "A hora de início deve ser menor do que a hora de término";
     } else {
-        // Converte a data para o formato do MySQL
+        // Esse trecho aqui converte a data para o formato do MySQL
         $data_mysql = DateTime::createFromFormat('d/m/Y', $data)->format('Y-m-d');
 
-        $sql_evento = "INSERT INTO evento (nome, descricao, hr_inicio, hr_termino, data, id_prioridade, id_usuario)
-        VALUES (?, ?, ?, ?, ?, ?, ?)";
-        $stmt_evento = $conexao->prepare($sql_evento);
-        if (!$stmt_evento) {
-            $errorMessage = "Erro na preparação da declaração SQL: " . $conexao->error;
-        } else {
-            $stmt_evento->bind_param("sssssii", $nome, $descricao, $hr_inicio, $hr_termino, $data_mysql, $prioridade_value, $id_usuario);
-            $result_evento = $stmt_evento->execute();
+        // Verificando se já existe um evento com o mesmo horário no mesmo dia
+        $sql_verifica = "SELECT * FROM evento WHERE data = ? AND id_usuario = ? AND (hr_inicio = ? OR hr_termino = ?)";
+        $stmt_verifica = $conexao->prepare($sql_verifica);
+        $stmt_verifica->bind_param("siss", $data_mysql, $id_usuario, $hr_inicio, $hr_termino);
+        $stmt_verifica->execute();
+        $result_verifica = $stmt_verifica->get_result();
 
-            if ($result_evento) {
-                $successMessage = "Evento adicionado com sucesso";
-                header("location: ../agenda.php");
-                exit;
+        if ($result_verifica->num_rows > 0) {
+            $errorMessage = "Já existe um evento para esse horário.";
+        } else {
+            $sql_evento = "INSERT INTO evento (nome, descricao, hr_inicio, hr_termino, data, id_prioridade, id_usuario)
+            VALUES (?, ?, ?, ?, ?, ?, ?)";
+            $stmt_evento = $conexao->prepare($sql_evento);
+            if (!$stmt_evento) {
+                $errorMessage = "Erro na preparação da declaração SQL: " . $conexao->error;
             } else {
-                $errorMessage = "Erro ao adicionar evento";
+                $stmt_evento->bind_param("sssssii", $nome, $descricao, $hr_inicio, $hr_termino, $data_mysql, $prioridade_value, $id_usuario);
+                $result_evento = $stmt_evento->execute();
+
+                if ($result_evento) {
+                    $successMessage = "Evento adicionado com sucesso";
+                    header("location: ../agenda.php");
+                    exit;
+                } else {
+                    $errorMessage = "Erro ao adicionar evento";
+                }
             }
         }
     }
@@ -105,8 +116,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <title>Planify Now</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/criar-evento.css">
 </head>
 <body>
@@ -144,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <div class="row mb-3">
                 <label class="col-sm-3 col-form-label">Hora de Início<br><h3 class="cinza">Exemplo: 09:30</h3></label>
                 <div class="col-sm-6">
-                    <input type="text" class="form-control" name="hr_inicio" value="<?php echo $hr_inicio; ?> ">
+                    <input type="text" class="form-control" name="hr_inicio" value="<?php echo $hr_inicio; ?>">
                 </div>
             </div>
 

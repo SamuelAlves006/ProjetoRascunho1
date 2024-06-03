@@ -78,19 +78,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
 
             $data_mysql = date("Y-m-d", strtotime(str_replace('/', '-', $data)));
 
+            // Verifica se já existe um evento com o mesmo horário no mesmo dia, excluindo o evento atual
+            $sql_verifica = "SELECT * FROM evento WHERE data = ? AND id_usuario = (SELECT id_usuario FROM evento WHERE id_evento = ?) AND id_evento != ? AND (hr_inicio = ? OR hr_termino = ?)";
+            $stmt_verifica = $conexao->prepare($sql_verifica);
+            $stmt_verifica->bind_param("siiss", $data_mysql, $id_evento, $id_evento, $hr_inicio, $hr_termino);
+            $stmt_verifica->execute();
+            $result_verifica = $stmt_verifica->get_result();
 
-            $sql_update = "UPDATE evento 
+            if ($result_verifica->num_rows > 0) {
+                $errorMessage = "Já existe um evento para esse horário.";
+            } else {
+                $sql_update = "UPDATE evento 
                         SET nome = ?, descricao = ?, hr_inicio = ?, hr_termino = ?, data = ?, id_prioridade = ? 
                         WHERE id_evento = ?";
-            $stmt = $conexao->prepare($sql_update);
-            $stmt->bind_param("sssssii", $nome, $descricao, $hr_inicio, $hr_termino, $data_mysql, $prioridade, $id_evento);
+                $stmt = $conexao->prepare($sql_update);
+                $stmt->bind_param("sssssii", $nome, $descricao, $hr_inicio, $hr_termino, $data_mysql, $prioridade, $id_evento);
 
-            if ($stmt->execute()) {
-                $successMessage = "Evento atualizado com sucesso";
-                header("location: ../agenda.php");
-                exit;
-            } else {
-                $errorMessage = "Erro ao atualizar o evento: " . $conexao->error;
+                if ($stmt->execute()) {
+                    $successMessage = "Evento atualizado com sucesso";
+                    header("location: ../agenda.php");
+                    exit;
+                } else {
+                    $errorMessage = "Erro ao atualizar o evento: " . $conexao->error;
+                }
             }
         } else {
             $errorMessage = "Prioridade selecionada inválida. Por favor, selecione uma prioridade válida.";
@@ -114,7 +124,7 @@ function validarFormatoData($date)
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/criar-evento.css">
 </head>
 <body>

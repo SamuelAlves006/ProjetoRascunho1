@@ -182,25 +182,23 @@ body {
   font-weight: bold;
 }
 
-/* Adicione estilos para a classe "priority-column" */
 .tasks-table td.prioridade {
-  border-radius: 15px; /* Define a borda arredondada */
-  padding: 8px; /* Aumenta o preenchimento para melhor visualização */
+  border-radius: 15px;
+  padding: 8px;
   text-align: center;
 }
 
-/* Estilos específicos para cada prioridade */
 .tasks-table td.prioridade[data-priority="Alta"] {
-  background-color: #ff9999; /* Cor de fundo vermelha para prioridade Alta */
-  color: #fff; /* Texto branco para melhor contraste */
+  background-color: #ff9999;
+  color: #fff;
 }
 
 .tasks-table td.prioridade[data-priority="Média"] {
-  background-color: #ffe066; /* Cor de fundo amarela para prioridade Média */
+  background-color: #ffe066;
 }
 
 .tasks-table td.prioridade[data-priority="Baixa"] {
-  background-color: #99ff99; /* Cor de fundo verde para prioridade Baixa */
+  background-color: #99ff99;
 }
 
 .container {
@@ -263,4 +261,36 @@ td .btn-danger {
 
 .centralizar {
   justify-content: center;
+}
+
+/* Código da parte de notificações aqui embaixo kkkkk */
+
+.dropdown-menu {
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  margin-right: 150px;
+}
+
+#dropdownMenuButton {
+  border: none;
+  background-color: white;
+  color: rgb(93, 93, 93);
+  margin-right: 150px;
+  font-size: 20px;
+  position: relative;
+}
+
+#dropdownMenuButton:hover {
+  color: rgb(0, 0, 0);
+  transition: 0.5s;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 6px;
+  right: 1px;
+  height: 10px;
+  width: 10px;
+  background-color: orange;
+  border-radius: 50%;
+  box-shadow: rgb(255, 119, 0) 0px 0px 15px;
 }
